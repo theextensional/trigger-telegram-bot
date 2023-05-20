@@ -11,7 +11,7 @@ env = Env()
 env.read_env()
 
 logger.remove()
-logger.add(sys.stderr, level=env.int('LOG_LEVEL'))
+logger.add(sys.stderr, level=env.int("LOG_LEVEL"))
 
 
 class TelegramBot(Bot):
@@ -19,7 +19,7 @@ class TelegramBot(Bot):
         self,
         token,
         googlesheet: GoogleSheet | None = None,
-    ):
+    ) -> None:
         super().__init__(
             token,
         )
@@ -28,10 +28,10 @@ class TelegramBot(Bot):
 
 
 bot: TelegramBot = TelegramBot(
-    token=env.str('BOT_TOKEN'),
+    token=env.str("BOT_TOKEN"),
     googlesheet=GoogleSheet(
-        env.str('CREDENTIAL_FILE'),
-        env.str('GOOGLESHEET_FILE_KEY'),
+        env.str("CREDENTIAL_FILE"),
+        env.str("GOOGLESHEET_FILE_KEY"),
     ),
 )
 dp = Dispatcher(bot)
@@ -50,4 +50,4 @@ logger.add(
     rotation="10 MB",
     compression="tar.xz",
 )
-logger.debug('✅ Бот запущен')
+logger.debug("✅ Бот запущен")

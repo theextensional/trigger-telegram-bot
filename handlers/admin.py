@@ -29,7 +29,7 @@ def upload_to_imgur(file_path: str) -> str:
     return uploaded_image.link
 
 
-async def attachment_handler(message: types.Message):
+async def attachment_handler(message: types.Message) -> str | None:
     if not message.reply_to_message.photo and not message.reply_to_message.document:
         return None
 
@@ -43,9 +43,11 @@ async def attachment_handler(message: types.Message):
     print(message.reply_to_message.document.mime_type)
 
     if message.reply_to_message.document:
-        if (
-            message.reply_to_message.document.mime_type in ("image/png")
-            and message.reply_to_message.document.file_size <= UPLOAD_LIMIT_GIF
+        if all(
+            {
+                message.reply_to_message.document.mime_type in ("image/png"),
+                message.reply_to_message.document.file_size <= UPLOAD_LIMIT_GIF,
+            }
         ):
             logger.debug("Document type is PNG or GIF")
             destination = await message.reply_to_message.document.download()
@@ -62,8 +64,7 @@ async def attachment_handler(message: types.Message):
 
 
 def check_trigger_key(message: types.Message) -> str | None:
-    if key := current_key(message.text, TRIGGER_KEY, REGEX_TRIGGER_KEY):
-        return key
+    return current_key(message.text, TRIGGER_KEY, REGEX_TRIGGER_KEY) or None
 
 
 async def add_regex(message: types.Message) -> None:
@@ -79,9 +80,7 @@ async def add_regex(message: types.Message) -> None:
     status = f"❌ Триггер `{trigger}` уже существует"
     if not bot.googlesheet.trigger_exists(trigger):
         attachments = await attachment_handler(message)
-        content = (
-            message.reply_to_message.caption if message.reply_to_message.caption else message.reply_to_message.text
-        )
+        content = message.reply_to_message.caption or message.reply_to_message.text
         tg = Trigger(
             trigger, note=f"Добавил {message.from_user.full_name}", attachments=attachments, content=content, regex=True
         )
@@ -104,9 +103,7 @@ async def add_trigger(message: types.Message) -> None:
     status = f"❌ Триггер `{trigger}` уже существует"
     if not bot.googlesheet.trigger_exists(trigger):
         attachments = await attachment_handler(message)
-        content = (
-            message.reply_to_message.caption if message.reply_to_message.caption else message.reply_to_message.text
-        )
+        content = message.reply_to_message.caption or message.reply_to_message.text
         tg = Trigger(trigger, note=f"Добавил {message.from_user.full_name}", attachments=attachments, content=content)
         bot.googlesheet.add_trigger(tg)
         status = f"✅ Триггер `{trigger}` успешно добавлен"
@@ -114,7 +111,7 @@ async def add_trigger(message: types.Message) -> None:
     await message.reply(status, parse_mode="markdown")
 
 
-def register_handlers_admin(dp: Dispatcher):
+def register_handlers_admin(dp: Dispatcher) -> None:
     dp.register_message_handler(
         add_regex,
         lambda msg: msg.reply_to_message and msg.text.startswith(REGEX_TRIGGER_KEY) and len(msg.text) > 1,

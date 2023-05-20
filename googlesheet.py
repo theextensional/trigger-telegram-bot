@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, List
+from typing import Any, List, Literal
 
 from loguru import logger
 from pygsheets import authorize
@@ -52,7 +52,7 @@ class GoogleSheet:
         Returns:
             dict[Any, Any] | None: The matched row or None.
         """
-        logger.debug(f'`{message}`')
+        logger.debug(f"`{message}`")
         if records := self._wks.get_all_records():
             self._count_rows = len(records)
             for row_id, row in enumerate(records, start=2):
@@ -75,7 +75,7 @@ class GoogleSheet:
             The row if the message matches the trigger, otherwise None.
         """
         if row["regex"] == "TRUE" and re.search(row["trigger"], message, re.IGNORECASE):
-            logger.debug('regex')
+            logger.debug("regex")
             return row
         if row["ignoreCase"] == "TRUE":
             row["trigger"] = row["trigger"].lower()
@@ -86,19 +86,19 @@ class GoogleSheet:
             return row
 
     def trigger_exists(self, value: str, col: int = 1) -> bool:
-        return True if value in self._wks.get_col(col, include_tailing_empty=False) else False
+        return value in self._wks.get_col(col, include_tailing_empty=False)
 
-    def add_trigger(self, trigger: Trigger):
+    def add_trigger(self, trigger: Trigger) -> None:
         row = list(trigger.__dict__.values())
         logger.debug(row)
         self._wks.append_table(row)
 
-    def set_count(self, trigger):
+    def set_count(self, trigger) -> Literal[False] | None:
         column_idx = len(trigger) - 1
-        col_letter = chr(ord('@') + column_idx)
+        col_letter = chr(ord("@") + column_idx)
         counter = trigger["count"] + 1
         cell_address = f'{col_letter}{trigger["id"]}'
-        logger.debug(f'{cell_address} = {counter}')
+        logger.debug(f"{cell_address} = {counter}")
         return self._wks.update_value(cell_address, counter)
 
     def get_trigger(self, trigger_id: int) -> Trigger:
