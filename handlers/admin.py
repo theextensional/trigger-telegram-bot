@@ -64,8 +64,7 @@ async def attachment_handler(message: types.Message):
 
 
 def check_trigger_key(message: types.Message) -> str | None:
-    if key := current_key(message.text, TRIGGER_KEY, REGEX_TRIGGER_KEY):
-        return key
+    return current_key(message.text, TRIGGER_KEY, REGEX_TRIGGER_KEY) or None
 
 
 async def add_regex(message: types.Message) -> None:
