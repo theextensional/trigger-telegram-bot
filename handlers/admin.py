@@ -81,9 +81,7 @@ async def add_regex(message: types.Message) -> None:
     status = f"❌ Триггер `{trigger}` уже существует"
     if not bot.googlesheet.trigger_exists(trigger):
         attachments = await attachment_handler(message)
-        content = (
-            message.reply_to_message.caption if message.reply_to_message.caption else message.reply_to_message.text
-        )
+        content = message.reply_to_message.caption or message.reply_to_message.text
         tg = Trigger(
             trigger, note=f"Добавил {message.from_user.full_name}", attachments=attachments, content=content, regex=True
         )
@@ -106,9 +104,7 @@ async def add_trigger(message: types.Message) -> None:
     status = f"❌ Триггер `{trigger}` уже существует"
     if not bot.googlesheet.trigger_exists(trigger):
         attachments = await attachment_handler(message)
-        content = (
-            message.reply_to_message.caption if message.reply_to_message.caption else message.reply_to_message.text
-        )
+        content = message.reply_to_message.caption or message.reply_to_message.text
         tg = Trigger(trigger, note=f"Добавил {message.from_user.full_name}", attachments=attachments, content=content)
         bot.googlesheet.add_trigger(tg)
         status = f"✅ Триггер `{trigger}` успешно добавлен"
