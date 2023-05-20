@@ -43,9 +43,11 @@ async def attachment_handler(message: types.Message):
     print(message.reply_to_message.document.mime_type)
 
     if message.reply_to_message.document:
-        if (
-            message.reply_to_message.document.mime_type in ("image/png")
-            and message.reply_to_message.document.file_size <= UPLOAD_LIMIT_GIF
+        if all(
+            {
+                message.reply_to_message.document.mime_type in ("image/png"),
+                message.reply_to_message.document.file_size <= UPLOAD_LIMIT_GIF,
+            }
         ):
             logger.debug("Document type is PNG or GIF")
             destination = await message.reply_to_message.document.download()
