@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, List
+from typing import Any, List, Literal
 
 from loguru import logger
 from pygsheets import authorize
@@ -88,12 +88,12 @@ class GoogleSheet:
     def trigger_exists(self, value: str, col: int = 1) -> bool:
         return value in self._wks.get_col(col, include_tailing_empty=False)
 
-    def add_trigger(self, trigger: Trigger):
+    def add_trigger(self, trigger: Trigger) -> None:
         row = list(trigger.__dict__.values())
         logger.debug(row)
         self._wks.append_table(row)
 
-    def set_count(self, trigger):
+    def set_count(self, trigger) -> Literal[False] | None:
         column_idx = len(trigger) - 1
         col_letter = chr(ord("@") + column_idx)
         counter = trigger["count"] + 1

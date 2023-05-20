@@ -12,7 +12,7 @@ def log_error(
     e: Exception,
     trigger: dict[str, Any],
     message: str,
-):
+) -> None:
     """
     Logs the error to the logger.
 
@@ -159,6 +159,6 @@ async def trigger(message: types.Message) -> None:
     bot.googlesheet.set_count(trigger)
 
 
-def register_handlers_client(dp: Dispatcher):
+def register_handlers_client(dp: Dispatcher) -> None:
     dp.register_message_handler(send_welcome, commands=["start", "help"])
     dp.register_message_handler(trigger)

@@ -29,7 +29,7 @@ def upload_to_imgur(file_path: str) -> str:
     return uploaded_image.link
 
 
-async def attachment_handler(message: types.Message):
+async def attachment_handler(message: types.Message) -> str | None:
     if not message.reply_to_message.photo and not message.reply_to_message.document:
         return None
 
@@ -111,7 +111,7 @@ async def add_trigger(message: types.Message) -> None:
     await message.reply(status, parse_mode="markdown")
 
 
-def register_handlers_admin(dp: Dispatcher):
+def register_handlers_admin(dp: Dispatcher) -> None:
     dp.register_message_handler(
         add_regex,
         lambda msg: msg.reply_to_message and msg.text.startswith(REGEX_TRIGGER_KEY) and len(msg.text) > 1,
