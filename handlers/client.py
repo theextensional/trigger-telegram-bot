@@ -71,41 +71,32 @@ async def trigger(message: types.Message) -> None:
     Args:
         message (types.Message): объект сообщения
     """
-    if trigger := bot.googlesheet.match_cell(message.text):
-        answer = ""
-        if "content" in trigger and trigger["content"]:
-            answer += trigger["content"].replace("**", "*").replace("> ", "")
-            answer += "\n\n"
-        if "embed" in trigger and trigger["embed"]:
-            logger.debug(f"Embed: {trigger['embed']}")
-            embed = json.loads(trigger["embed"])
-            if "author" in embed:
-                author = embed["author"]
-                answer += author["name"] + "\n" if "url" not in author else f"[{author['name']}]({author['url']})\n\n"
-            if "title" in embed:
-                if "url" in embed:
-                    answer += f"[{embed['title']}]({embed['url']})\n\n"
-                else:
-                    answer += f"*{embed['title']}*\n\n"
-            if "description" in embed:
-                answer += embed["description"].replace("*", "\\*") + "\n\n"
-            if "image" in embed:
-                image = embed["image"]["url"]
-                extension = image.split(".")[-1].lower()
-                answer = caption(answer)
-                if extension in ["jpg", "jpeg", "png"]:
-                    try:
-                        await message.reply_photo(
-                            image,
-                            caption=answer,
-                            parse_mode=types.ParseMode.MARKDOWN,
-                        )
-                        bot.googlesheet.set_count(trigger)
-                    except Exception as e:
-                        log_error(e, trigger, message.text)
-                    return
+    if not (trigger := bot.googlesheet.match_cell(message.text)):
+        return
+    answer = ""
+    if "content" in trigger and trigger["content"]:
+        answer += trigger["content"].replace("**", "*").replace("> ", "")
+        answer += "\n\n"
+    if "embed" in trigger and trigger["embed"]:
+        logger.debug(f"Embed: {trigger['embed']}")
+        embed = json.loads(trigger["embed"])
+        if "author" in embed:
+            author = embed["author"]
+            answer += author["name"] + "\n" if "url" not in author else f"[{author['name']}]({author['url']})\n\n"
+        if "title" in embed:
+            if "url" in embed:
+                answer += f"[{embed['title']}]({embed['url']})\n\n"
+            else:
+                answer += f"*{embed['title']}*\n\n"
+        if "description" in embed:
+            answer += embed["description"].replace("*", "\\*") + "\n\n"
+        if "image" in embed:
+            image = embed["image"]["url"]
+            extension = image.split(".")[-1].lower()
+            answer = caption(answer)
+            if extension in ["jpg", "jpeg", "png"]:
                 try:
-                    await message.reply_document(
+                    await message.reply_photo(
                         image,
                         caption=answer,
                         parse_mode=types.ParseMode.MARKDOWN,
@@ -114,31 +105,31 @@ async def trigger(message: types.Message) -> None:
                 except Exception as e:
                     log_error(e, trigger, message.text)
                 return
-            if "fields" in embed:
-                for field in embed["fields"]:
-                    if "name" in field:
-                        answer += f"*{field['name']}*\n"
-                    if "value" in field:
-                        answer += field["value"].replace("*", "\\*") + "\n"
+            try:
+                await message.reply_document(
+                    image,
+                    caption=answer,
+                    parse_mode=types.ParseMode.MARKDOWN,
+                )
+                bot.googlesheet.set_count(trigger)
+            except Exception as e:
+                log_error(e, trigger, message.text)
+            return
+        if "fields" in embed:
+            for field in embed["fields"]:
+                if "name" in field:
+                    answer += f"*{field['name']}*\n"
+                if "value" in field:
+                    answer += field["value"].replace("*", "\\*") + "\n"
 
-        if "attachments" in trigger and trigger["attachments"]:
-            logger.debug("Attachments: {}", trigger["attachments"])
-            for attachment in trigger["attachments"].split("\n"):
-                extension = attachment.split(".")[-1].lower()
-                answer = caption(answer)
-                if extension in ["jpg", "jpeg"]:
-                    try:
-                        await message.reply_photo(
-                            attachment,
-                            caption=answer,
-                            parse_mode=types.ParseMode.MARKDOWN,
-                        )
-                    except Exception as e:
-                        log_error(e, trigger, message.text)
-                        return
-                    continue
+    if "attachments" in trigger and trigger["attachments"]:
+        logger.debug("Attachments: {}", trigger["attachments"])
+        for attachment in trigger["attachments"].split("\n"):
+            extension = attachment.split(".")[-1].lower()
+            answer = caption(answer)
+            if extension in ["jpg", "jpeg"]:
                 try:
-                    await message.reply_document(
+                    await message.reply_photo(
                         attachment,
                         caption=answer,
                         parse_mode=types.ParseMode.MARKDOWN,
@@ -146,16 +137,26 @@ async def trigger(message: types.Message) -> None:
                 except Exception as e:
                     log_error(e, trigger, message.text)
                     return
+                continue
+            try:
+                await message.reply_document(
+                    attachment,
+                    caption=answer,
+                    parse_mode=types.ParseMode.MARKDOWN,
+                )
+            except Exception as e:
+                log_error(e, trigger, message.text)
+                return
 
-            bot.googlesheet.set_count(trigger)
-            return
-
-        logger.debug("Answer: {}", answer.strip())
-        await message.reply(
-            answer.replace("_", "\\_"),
-            parse_mode=types.ParseMode.MARKDOWN,
-        )
         bot.googlesheet.set_count(trigger)
+        return
+
+    logger.debug("Answer: {}", answer.strip())
+    await message.reply(
+        answer.replace("_", "\\_"),
+        parse_mode=types.ParseMode.MARKDOWN,
+    )
+    bot.googlesheet.set_count(trigger)
 
 
 def register_handlers_client(dp: Dispatcher):
